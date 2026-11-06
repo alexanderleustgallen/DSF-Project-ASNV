@@ -1,0 +1,4 @@
+# Rebuilt by scripts/build_meltome.py
+data/*.parquet
+
+__pycache__/
