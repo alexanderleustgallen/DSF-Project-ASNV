@@ -1,0 +1,202 @@
+{
+  "sources": [
+    {
+      "url": "https://github.com/J-SNACKKB/FLIP/raw/62cace8735f5610e2743cf06ce0f944b37fffaa6/splits/meltome/full_dataset.json.zip",
+      "sha256": "9e43778730760180581493d05b08c493ad897e4390763cfadad092e62aaea05d"
+    },
+    {
+      "url": "http://data.bioembeddings.com/public/FLIP/meltome/human_sequences.tsv",
+      "sha256": "8d4b71e18db5bf7ecbad3d6d17cdea127ef7d47a939ab787b1b18f34c8c5292c"
+    }
+  ],
+  "rows": 33904,
+  "unique_ids": 33904,
+  "unique_sequences": 33389,
+  "content_sha256": "51b6aa5a691e7376ec84d121bb52dd8fbce420971edeabb516ef7ebdd10e6d12",
+  "condition_rows": {
+    "cell": 9791,
+    "lysate": 24113
+  },
+  "per_organism": [
+    {
+      "organism": "Arabidopsis thaliana",
+      "condition": "lysate",
+      "rows": 2493,
+      "tm_median": 45.18,
+      "over_esm2_limit": 124
+    },
+    {
+      "organism": "Bacillus subtilis",
+      "condition": "lysate",
+      "rows": 1563,
+      "tm_median": 44.01,
+      "over_esm2_limit": 29
+    },
+    {
+      "organism": "Caenorhabditis elegans",
+      "condition": "lysate",
+      "rows": 3297,
+      "tm_median": 41.16,
+      "over_esm2_limit": 276
+    },
+    {
+      "organism": "Danio rerio",
+      "condition": "lysate",
+      "rows": 253,
+      "tm_median": 51.45,
+      "over_esm2_limit": 16
+    },
+    {
+      "organism": "Drosophila melanogaster",
+      "condition": "lysate",
+      "rows": 1685,
+      "tm_median": 42.92,
+      "over_esm2_limit": 288
+    },
+    {
+      "organism": "Escherichia coli",
+      "condition": "lysate",
+      "rows": 1831,
+      "tm_median": 50.05,
+      "over_esm2_limit": 30
+    },
+    {
+      "organism": "Geobacillus stearothermophilus",
+      "condition": "lysate",
+      "rows": 775,
+      "tm_median": 70.25,
+      "over_esm2_limit": 16
+    },
+    {
+      "organism": "Homo sapiens",
+      "condition": "cell",
+      "rows": 9791,
+      "tm_median": 51.62,
+      "over_esm2_limit": 1432
+    },
+    {
+      "organism": "Mus musculus",
+      "condition": "lysate",
+      "rows": 7104,
+      "tm_median": 49.54,
+      "over_esm2_limit": 837
+    },
+    {
+      "organism": "Oleispira antarctica",
+      "condition": "lysate",
+      "rows": 1352,
+      "tm_median": 41.79,
+      "over_esm2_limit": 43
+    },
+    {
+      "organism": "Picrophilus torridus",
+      "condition": "lysate",
+      "rows": 908,
+      "tm_median": 71.56,
+      "over_esm2_limit": 14
+    },
+    {
+      "organism": "Saccharomyces cerevisiae",
+      "condition": "lysate",
+      "rows": 1948,
+      "tm_median": 49.5,
+      "over_esm2_limit": 141
+    },
+    {
+      "organism": "Thermus thermophilus",
+      "condition": "lysate",
+      "rows": 904,
+      "tm_median": 84.67,
+      "over_esm2_limit": 13
+    }
+  ],
+  "identical_sequences": {
+    "sequences_on_multiple_rows": 475,
+    "rows_affected": 990,
+    "sequences_across_organisms": 173
+  },
+  "rows_over_1022_residues": 3259,
+  "longest_sequence": 35213,
+  "rows_with_X_or_U": 92,
+  "filters": {
+    "human_symbols_resolved_by": {
+      "primary": 9159,
+      "synonym": 887,
+      "ambiguous": 41,
+      "unknown": 654
+    },
+    "human_symbols_with_new_accession": 86,
+    "human_symbols_without_accession_in_dump_now_resolved": 0,
+    "raw_rows": 221203,
+    "dropped_rows_missing_id_sequence_or_tm": 20709,
+    "dropped_ids_in_multiple_organisms": [
+      "O43272",
+      "Q64727",
+      "Q8NI35"
+    ],
+    "proteins_measured_in_both_conditions": {
+      "Escherichia coli": 1556,
+      "Thermus thermophilus": 777
+    },
+    "dropped_cell_rows_for_dual_condition_organisms": 3099
+  },
+  "human_replicates_by_run": {
+    "HAOEC": {
+      "median_repeats": 2.0,
+      "median_sd": 0.298
+    },
+    "HEK293T": {
+      "median_repeats": 2.0,
+      "median_sd": 0.405
+    },
+    "HL60": {
+      "median_repeats": 2.0,
+      "median_sd": 0.294
+    },
+    "HaCaT": {
+      "median_repeats": 2.0,
+      "median_sd": 0.586
+    },
+    "HepG2": {
+      "median_repeats": 6.0,
+      "median_sd": 0.97
+    },
+    "Jurkat": {
+      "median_repeats": 6.0,
+      "median_sd": 0.796
+    },
+    "K562": {
+      "median_repeats": 8.0,
+      "median_sd": 0.715
+    },
+    "U937": {
+      "median_repeats": 2.0,
+      "median_sd": 0.277
+    },
+    "colon_cancer_spheroids": {
+      "median_repeats": 2.0,
+      "median_sd": 0.962
+    },
+    "pTcells": {
+      "median_repeats": 2.0,
+      "median_sd": 0.544
+    }
+  },
+  "agreement_between_runs": {
+    "E. coli cell vs lysate": {
+      "shared_proteins": 1557,
+      "pearson": 0.371,
+      "rmse_c": 7.49
+    },
+    "T. thermophilus cell vs lysate": {
+      "shared_proteins": 777,
+      "pearson": 0.588,
+      "rmse_c": 5.63
+    },
+    "M. musculus BMDC vs liver": {
+      "shared_proteins": 1441,
+      "pearson": 0.484,
+      "rmse_c": 5.39
+    }
+  }
+}

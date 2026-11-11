@@ -1,0 +1,7 @@
+# Rebuilt by scripts/build_meltome.py
+data/*.parquet
+
+# Rebuilt by scripts/embed_esm.py
+cache/
+
+__pycache__/
