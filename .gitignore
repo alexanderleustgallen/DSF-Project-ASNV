@@ -1,7 +1,25 @@
-# Rebuilt by scripts/build_meltome.py
-data/*.parquet
+# Data: large files are shared via the team drive, not git.
+data/raw/*
+!data/raw/ogt.csv
+data/interim/*
+!data/interim/meltome.manifest.json
+data/processed/*
+!data/processed/split.csv
+!data/*/.gitkeep
 
-# Rebuilt by scripts/embed_esm.py
-cache/
+# Model outputs: metrics and figures are small and checked in; predictions are not.
+results/predictions/*
+!results/predictions/.gitkeep
 
+# Course lecture slides (local reference only)
+slides/
+
+# Python and Jupyter
 __pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Claude Code worktrees
+.claude/worktrees/

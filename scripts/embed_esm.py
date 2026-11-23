@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute frozen, mean-pooled ESM-2 embeddings for data/meltome.parquet.
+"""Compute frozen, mean-pooled ESM-2 embeddings for data/interim/meltome.parquet (notebook 02).
 
 Usage:
     python scripts/embed_esm.py                 # ESM-2 35M
@@ -8,11 +8,11 @@ Usage:
 Requires torch, fair-esm, numpy, pandas and pyarrow.
 
 Embeddings depend only on sequences, so they are computed once per unique sequence
-(rule 4) and stay valid when rows are removed from the parquet. Sequences longer than
+and stay valid when rows are removed from the parquet. Sequences longer than
 1022 residues are cut to their first 1022, the ESM-2 limit. A few sequences become
 identical through this and then share one embedding row.
 
-Output, in --out-dir (default cache/):
+Output, in --out-dir (default data/interim/):
     embeddings.npy         float32, one row per unique truncated sequence
     embeddings_index.parquet  one row per parquet row: id, sequence_sha256, embedding_row
     embeddings.run.json    model, truncation rule, parquet hash, counts, timings
@@ -114,8 +114,8 @@ def main() -> None:
     root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--model", choices=MODELS, default="35M")
-    parser.add_argument("--parquet", type=Path, default=root / "data/meltome.parquet")
-    parser.add_argument("--out-dir", type=Path, default=root / "cache")
+    parser.add_argument("--parquet", type=Path, default=root / "data/interim/meltome.parquet")
+    parser.add_argument("--out-dir", type=Path, default=root / "data/interim")
     parser.add_argument("--work-dir", type=Path, help="Default: ~/.cache/dsf-asnv/embeddings/<model>")
     parser.add_argument("--max-tokens", type=int, default=4096)
     parser.add_argument("--max-seqs", type=int, default=16)

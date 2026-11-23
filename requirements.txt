@@ -1,0 +1,18 @@
+# Core
+numpy
+pandas
+pyarrow
+scipy
+scikit-learn
+xgboost
+matplotlib
+seaborn
+
+# ESM-2 embeddings (only needed to recompute them, notebook 02)
+torch
+fair-esm
+
+# Notebooks
+jupyterlab
+ipykernel
+nbstripout

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build data/meltome.parquet (briefing section 3.1) from the FLIP Meltome dump.
+"""Build data/interim/meltome.parquet from the FLIP Meltome dump (used by notebook 01).
 
 Usage:
     python scripts/build_meltome.py
@@ -14,9 +14,8 @@ Requires pandas and pyarrow. Two inputs, both pinned by SHA-256:
 Downloads go to ~/.cache/dsf-asnv/meltome-raw, outside git and OneDrive; override
 with --cache-dir.
 
-Row numbers in the parquet are the index space of splits/*.json, so the output
-order is deterministic. `content_sha256` in data/meltome.manifest.json must match
-on every machine; a mismatch means splits do not apply to that parquet.
+The output order is deterministic. `content_sha256` in data/interim/meltome.manifest.json
+must match on every machine; a mismatch means your parquet differs from the team's.
 
 Labels: every `runName` maps to organism and condition in RUNS. The dump only
 labels this for the non-human runs. The human runs were matched to Supplementary
@@ -35,7 +34,7 @@ Filters, in order:
   2. Drop accessions that occur in more than one organism.
 
 One row per id: E. coli and T. thermophilus were measured in both conditions. By
-default only their lysate runs are kept, so `id` stays unique as section 3.1
+default only their lysate runs are kept, so `id` stays unique as the dataset
 requires. --both-conditions keeps both runs and makes (id, condition) the key.
 
 Tm is `meltingPoint`, the median over all remaining rows of a protein (replicates,
@@ -319,7 +318,7 @@ def main() -> None:
     root = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cache-dir", type=Path, default=Path.home() / ".cache/dsf-asnv/meltome-raw")
-    parser.add_argument("--out", type=Path, default=root / "data/meltome.parquet")
+    parser.add_argument("--out", type=Path, default=root / "data/interim/meltome.parquet")
     parser.add_argument("--both-conditions", action="store_true", help="Keep cell and lysate rows; id is no longer unique.")
     args = parser.parse_args()
 

@@ -1,154 +1,122 @@
-# Tm Prediction with a Two-Stage Model and Ensemble
+# Protein Tm Prediction: One Dataset, Many Models
 
-Predict a protein's melting temperature (Tm) from its amino acid sequence, together with the organism it most likely comes from.
+Predict a protein's melting temperature (Tm) from its ESM-2 embedding and the optimal growth temperature (OGT) of its organism, then compare several models on the same dataset.
 
 **Timeline:** 2026-11-09 to 2026-11-27, team of four.
 
-This README is an overview. The full project briefing, in German, is [PROJEKTBEESCHREIBUNG.md](PROJEKTBEESCHREIBUNG.md). It is the single source of truth: read it before taking on a task, and agree on deviations beforehand.
+> **Changed on 2026-11-23.** The two-stage predictor with an ensemble is dropped, and with it the old briefing (`PROJEKTBEESCHREIBUNG.md`, still in the git history). The work now happens in Jupyter notebooks: one shared dataset is built once, and every model is trained and tested on it with the same split. The Meltome dataset and the ESM-2 embeddings built so far stay valid.
 
-> **Changed on 2026-11-11.** The project no longer has a research question. Hypotheses H1–H4, the four split conditions and the leakage analysis are dropped. The goal is now a working prediction tool. The dataset and ESM-2 embeddings built so far stay valid.
-
-## Goal
-
-A learning project that ends with a usable model:
-
-- **Input:** a protein's amino acid sequence.
-- **Output:** predicted Tm in °C with an error estimate, plus the predicted source organism.
+## Pipeline
 
 ```
-python predict.py --sequence MKTAYIAKQR...
+Meltome Atlas ──┐
+UniProt ────────┼──► 01 data collection ──► 02 build dataset ──► dataset.parquet + split.csv
+OGT sources ────┘                         (ESM-2 embeddings)             │
+                                                                         ├──► 03 EDA
+                                                                         ├──► 04 linear models  ──┐
+                                                                         ├──► 05 tree models    ──┼──► 07 comparison
+                                                                         └──► 06 neural network ──┘
 ```
 
-It does not matter whether similar tools exist. The point is to build several models, compare them, and combine them into one tool.
+## Dataset
+
+`data/processed/dataset.parquet`, one row per protein:
+
+| Column | Type | Description |
+| --- | --- | --- |
+| `id` | str | UniProt accession, unique |
+| `organism` | str | Source organism. Not a feature: used for analysis only |
+| `ogt` | float | Optimal growth temperature of the organism in °C. Feature |
+| `emb_0` … `emb_479` | float | Mean-pooled ESM-2 35M embedding of the sequence. Features |
+| `tm` | float | Melting temperature in °C. Target |
+
+That makes **481 features** (`ogt` + 480 embedding dimensions). The raw sequence is not part of the dataset; it stays in `data/interim/meltome.parquet`.
+
+`data/processed/split.csv` assigns every `id` to `train` or `test`. It is created once in notebook 02 (random 80/20, stratified by organism, seed 42) and used by every model.
+
+The source data has 33,904 proteins from 13 organisms. Median Tm per organism ranges from 41 °C (*C. elegans*) to 85 °C (*T. thermophilus*).
+
+## Notebooks
+
+| Notebook | Content | Writes | Owner |
+| --- | --- | --- | --- |
+| [01_data_collection](notebooks/01_data_collection.ipynb) | Meltome + UniProt, OGT per organism | `data/interim/meltome.parquet`, `data/raw/ogt.csv` | TBD |
+| [02_build_dataset](notebooks/02_build_dataset.ipynb) | Merge, clean, ESM-2 embeddings, split | `data/processed/dataset.parquet`, `split.csv` | TBD |
+| [03_eda](notebooks/03_eda.ipynb) | Distributions, Tm vs. OGT, embedding PCA | `results/figures/` | TBD |
+| [04_linear_models](notebooks/04_linear_models.ipynb) | Baselines, Ridge, Lasso | `results/metrics/`, `results/predictions/` | TBD |
+| [05_tree_models](notebooks/05_tree_models.ipynb) | Random forest, XGBoost | `results/metrics/`, `results/predictions/` | TBD |
+| [06_neural_network](notebooks/06_neural_network.ipynb) | MLP | `results/metrics/`, `results/predictions/` | TBD |
+| [07_model_comparison](notebooks/07_model_comparison.ipynb) | All models side by side | `results/figures/` | TBD |
+
+Notebooks 03 to 06 only need `dataset.parquet` and `split.csv`, so they can be worked on in parallel once notebook 02 has run.
+
+## Repository structure
+
+```
+├── notebooks/          the seven notebooks above: code and explanations
+├── src/                small shared helpers, imported by the notebooks
+│   ├── paths.py        all file paths
+│   ├── data.py         load_dataset(), make_split(), get_split()
+│   └── evaluate.py     compute_metrics(), save_results(), load_all_results()
+├── scripts/            data pipeline scripts, called from notebooks 01 and 02
+│   ├── build_meltome.py
+│   └── embed_esm.py
+├── data/
+│   ├── raw/            downloads; ogt.csv is checked in
+│   ├── interim/        meltome.parquet, embeddings (not in git)
+│   └── processed/      dataset.parquet (not in git), split.csv (in git)
+├── results/
+│   ├── metrics/        one JSON per model (in git)
+│   ├── predictions/    one CSV of test predictions per model (not in git)
+│   └── figures/
+├── presentation/       final slides and report
+└── requirements.txt
+```
+
+## Setup
+
+```
+python -m venv .venv
+.venv\Scripts\activate          # Windows; macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+nbstripout --install            # strips notebook outputs on commit, avoids merge conflicts
+jupyter lab
+```
+
+Large files are not in git. Copy them from the team drive into `data/interim/`:
+
+- `meltome.parquet` (or rebuild it in notebook 01, takes a minute)
+- `embeddings.npy`, `embeddings_index.parquet`, `embeddings.run.json` (rebuilding takes about 3.6 hours on CPU)
+
+`data/interim/meltome.manifest.json` holds the expected `content_sha256` of `meltome.parquet`; notebook 02 also checks that the embeddings match the sequences.
+
+## Working rules
+
+1. **One owner per notebook.** Git cannot merge two people's edits to the same notebook.
+2. **Every model uses `get_split()` and `save_results()`** from `src/`. That keeps the split and the metrics identical, so the results are comparable.
+3. **The split is fixed.** `split.csv` is only recreated if the whole team agrees.
+4. **No tuning on the test set.** Hyperparameters are chosen by cross-validation on the training set.
+5. **Write decisions down** in the "Notes and decisions" section at the end of each notebook.
+6. **Reproducible:** fixed seeds, recorded in `params` when calling `save_results()`.
+
+## Metrics
+
+RMSE in °C (primary), MAE, R² and Spearman correlation, all on the same test set. `baseline_mean` (training mean) and `baseline_ogt` (linear model on OGT only) are the reference points every model has to beat.
 
 ## Status
 
-| Part | Status | File |
-| --- | --- | --- |
-| Dataset | done | `data/meltome.parquet`, built by `scripts/build_meltome.py` |
-| ESM-2 35M embeddings | done | `cache/embeddings.npy`, built by `scripts/embed_esm.py` |
-| Split and folds | open | `splits/` |
-| Stage 1, Tm models, ensemble | open | |
-| `predict.py`, app | open | |
-
-The dataset has 33,904 proteins from 13 organisms in the Meltome Atlas. Median Tm per organism ranges from 41 °C (*C. elegans*) to 85 °C (*Thermus thermophilus*). All `cell` rows are human, and human only appears as `cell`, so measurement type and organism cannot be separated.
-
-## Architecture
-
-```
-Sequence ──► Stage 1: organism classifier (ESM ──► 13 probabilities)
-   │                          │
-   ├──► comp + organism ──► Ridge ────────► Tm₁ ─┐
-   ├──► ESM  + organism ──► Ridge / MLP ──► Tm₂ ─┼──► Ensemble ──► Tm ± error
-   └──► one-hot ──► CNN (optional) ───────► Tm₃ ─┘
-```
-
-### Stage 1: organism classifier
-
-Logistic regression (optionally a small MLP) on the 480-dimensional ESM-2 embedding. It outputs one probability per organism and uses class weights, because class sizes range from 253 to 9,791 proteins.
-
-### Stage 2: Tm models
-
-| Name | Features | Model | Status |
-| --- | --- | --- | --- |
-| `comp` | 20 amino acid frequencies + length + organism probabilities | Ridge | required |
-| `esm` | ESM-2 embedding + organism probabilities | Ridge, optionally MLP | required |
-| `cnn` | one-hot sequence only | small 1D CNN from scratch | optional, decided at Gate 1 |
-
-### Ensemble
-
-A Ridge model learns how much each Tm model counts. If the CNN is dropped, the ensemble combines `comp` and `esm`.
-
-### Baselines
-
-| Name | Prediction |
+| Part | Status |
 | --- | --- |
-| `mean` | Training set mean |
-| `organism` | Median Tm of the true source organism, ignoring the sequence |
-
-### Out-of-fold predictions
-
-Stage 2 and the ensemble are trained on predictions from other models. These must be out-of-fold: the prediction for a training row in fold k comes from a model trained without fold k. Otherwise stage 1 is overconfident on its own training data and the later stages rely on it too much.
-
-## Evaluation
-
-- **One fixed test split:** sequences are clustered with MMseqs2 (proposed threshold 30 % identity). 80 % of clusters go to training, 20 % to test. Training has five cluster-based folds.
-- **Tm metrics:** RMSE in °C (primary), MAE, Spearman. The error shown by `predict.py` is the final ensemble's test RMSE.
-- **Stage 1 metrics:** accuracy, balanced accuracy, confusion matrix.
-- **Comparisons:** each model against the ensemble; with and without the organism feature; all models against both baselines; ensemble weights.
-
-## Interfaces
-
-These formats are fixed at Gate 1 and only change afterwards if everyone agrees. Details are in the briefing, section 5.
-
-| File | Content |
-| --- | --- |
-| `data/meltome.parquet` | `id`, `sequence`, `tm`, `organism`, `condition`; row numbers are the index space for everything else |
-| `splits/main.json` | `identity`, `seed`, `train`, `train_fold`, `test` |
-| `splits/final.json` | same format, all rows in `train`, empty `test`, for the final model |
-| `predictions/{model}.parquet` | `row`, `part` (`oof` or `test`), `tm_pred` |
-| `predictions/organism.parquet` | `row`, `part`, one `p_{organism}` column per class |
-| `results/results.csv` | one row per Tm model: `model, rmse, mae, spearman, n_train, n_test, seed` |
-| `results/classifier.csv` | stage 1 metrics |
-
-## Hard rules
-
-1. **Split and folds belong to role A.** Model code loads `splits/*.json` and never computes splits.
-2. **The test set is only used for the final evaluation.** Every hyperparameter search runs over the training folds.
-3. **Stage 2 and the ensemble are trained only on out-of-fold predictions.**
-4. **No fine-tuning of ESM-2.**
-5. **Embeddings are computed once and cached.**
-6. **Nothing new after Gate 2 (2026-11-20).** Week 3 is for the app, figures and the report.
-7. **Every result is reproducible:** fixed seed, recorded in the result row.
-
-## Roles
-
-| Role | Responsibility | Delivers |
-| --- | --- | --- |
-| A | Data, `lysate`/`cell` decision, MMseqs2 clustering, split and folds | `data/meltome.parquet`, `splits/*.json` |
-| B | Stage 1, CNN | `predictions/organism.parquet`, `predictions/cnn.parquet`, `results/classifier.csv` |
-| C | `comp` and `esm` models, ensemble, evaluation, `predict.py` | `predictions/*.parquet`, `results/results.csv`, `predict.py` |
-| D | App, figures, report | `app.py`, `figures/`, `paper/` |
-
-D supports A and C in weeks 1 and 2, then works independently from Gate 2 onwards.
-
-## Schedule
-
-| Period | A | B | C | D |
-| --- | --- | --- | --- | --- |
-| Nov 9–13 | Data (done), split and folds | Stage 1 | `comp`, `esm`, baselines | Supports A and C |
-| Nov 16–20 | Final folds, reproduction | CNN | Ensemble, `predict.py` | App skeleton, first figures |
-| Nov 23–27 | Verify reproduction | Verify reproduction | Verify reproduction | App, figures, report |
-
-- **Gate 1, Fri Nov 13:** the split exists, and stage 1, `comp`, `esm` and both baselines have test numbers. Decide whether the CNN stays in.
-- **Gate 2, Fri Nov 20:** the ensemble and `predict.py` run on the final model. Feature freeze from here on.
-- **Submission, Fri Nov 27.**
-
-## Compute
-
-A normal laptop is enough. The ESM-2 35M embeddings took 3.6 hours on CPU and are done. Ridge models, stage 1 and the ensemble take seconds to minutes. A small CNN takes roughly 20 minutes to 1.5 hours per training run on all data. If that is too slow, shrink it, run it overnight, use a free Colab GPU, or drop it.
-
-## Reproducing the data
-
-Requires Python with pandas and pyarrow, plus torch and fair-esm for the embeddings.
-
-```
-python scripts/build_meltome.py
-python scripts/embed_esm.py
-```
-
-`data/*.parquet` and `cache/` are not checked in. `data/meltome.manifest.json` holds the expected `content_sha256`; if it does not match on your machine, split files do not apply to your parquet.
-
-## Out of scope
-
-- A research question or a contribution to research
-- Beating the state of the art
-- New architectures
-- Protein engineering or mutation prediction
-- Scraping: all data comes from a download
-
-If a task starts heading in one of these directions, stop and ask.
+| Meltome + UniProt data | done, `scripts/build_meltome.py` |
+| ESM-2 35M embeddings | done, `scripts/embed_esm.py` |
+| OGT per organism | open, fill `data/raw/ogt.csv` |
+| Dataset and split | open, notebook 02 |
+| Models | open, notebooks 04 to 06 |
+| Comparison, presentation | open |
 
 ## Open points
 
-See the briefing, [section 12](PROJEKTBEESCHREIBUNG.md#12-offene-punkte): lysate only or both measurement types, the identity threshold, whether the CNN stays in, logistic regression or MLP for stage 1, Streamlit or Gradio for the app, and an optional growth-temperature variant of stage 1.
+- **OGT sources** for all 13 organisms, including animals and plants (body or growth temperature).
+- **Lysate vs. cell:** all human rows are `cell` measurements, all others `lysate`. Keep both or drop one?
+- **OGT is constant per organism.** With only 13 organisms, `ogt` takes 13 values and partly encodes organism identity. A random split lets models use that; a split by organism would test generalization to unseen organisms. Decide which question the comparison answers.
+- **Model list:** which variants per notebook, and whether to also run each model without `ogt`.
