@@ -48,7 +48,7 @@ The source data has 33,904 proteins from 13 organisms. Median Tm per organism ra
 | [06_neural_network](notebooks/06_neural_network.ipynb) | MLP | `results/metrics/`, `results/predictions/` | TBD |
 | [07_model_comparison](notebooks/07_model_comparison.ipynb) | All models side by side | `results/figures/` | TBD |
 
-Notebooks 03 to 06 only need `dataset.parquet` and `split.csv`, so they can be worked on in parallel once notebook 02 has run.
+Each notebook is a template: headings, step-by-step instructions, a "Done when" checklist, and empty code cells to fill in. Notebooks 03 to 06 only need `dataset.parquet` and `split.csv`, so they can be worked on in parallel once notebook 02 has run.
 
 ## Repository structure
 
@@ -70,6 +70,7 @@ Notebooks 03 to 06 only need `dataset.parquet` and `split.csv`, so they can be w
 │   ├── predictions/    one CSV of test predictions per model (not in git)
 │   └── figures/
 ├── presentation/       final slides and report
+├── AGENTS.md           instructions for AI agents (CLAUDE.md points here)
 └── requirements.txt
 ```
 
@@ -92,6 +93,8 @@ Large files are not in git. Copy them from the team drive into `data/interim/`:
 
 ## Working rules
 
+These rules apply to people and AI agents alike. When you work with an AI agent, point it to [AGENTS.md](AGENTS.md), which repeats them in more detail.
+
 1. **One owner per notebook.** Git cannot merge two people's edits to the same notebook.
 2. **Every model uses `get_split()` and `save_results()`** from `src/`. That keeps the split and the metrics identical, so the results are comparable.
 3. **The split is fixed.** `split.csv` is only recreated if the whole team agrees.
@@ -109,6 +112,8 @@ RMSE in °C (primary), MAE, R² and Spearman correlation, all on the same test s
 | --- | --- |
 | Meltome + UniProt data | done, `scripts/build_meltome.py` |
 | ESM-2 35M embeddings | done, `scripts/embed_esm.py` |
+| Notebooks | templates with instructions, code still to be written |
+| `src/` helpers | done: paths, dataset loading, split, metrics |
 | OGT per organism | open, fill `data/raw/ogt.csv` |
 | Dataset and split | open, notebook 02 |
 | Models | open, notebooks 04 to 06 |
